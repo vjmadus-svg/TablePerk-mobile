@@ -31,7 +31,14 @@ npm install
 npx expo start
 ```
 
-Then press `a` for Android emulator / device, or `i` for iOS simulator.
+If Metro complains about a missing Expo package, install SDK-aligned deps with:
+
+```bash
+npx expo install expo-asset expo-font expo-splash-screen
+npx expo start --clear
+```
+
+Then press `a` for Android emulator / device, or `i` for iOS simulator. Scan the QR code with Expo Go on a physical phone.
 
 ## Project structure
 
@@ -62,6 +69,10 @@ Then press `a` for Android emulator / device, or `i` for iOS simulator.
 - Icons are from `@expo/vector-icons` (Ionicons).
 - Images load from Unsplash (network required).
 
+## Companion web app
+
+The original static website lives at [vjmadus-svg/TablePerk](https://github.com/vjmadus-svg/TablePerk).
+
 ## Design tokens
 
 | Token   | Value     |
@@ -71,7 +82,3 @@ Then press `a` for Android emulator / device, or `i` for iOS simulator.
 | Ink     | `#20201D` |
 | Yellow  | `#FFD766` |
 | Line    | `#E8E1D9` |
-
-## Companion web app
-
-The original static website lives at [vjmadus-svg/TablePerk](https://github.com/vjmadus-svg/TablePerk).
