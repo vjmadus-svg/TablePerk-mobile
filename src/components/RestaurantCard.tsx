@@ -1,3 +1,4 @@
+import { useAppStore } from '@/store/useAppStore';
 import React from 'react';
 import {
   View,
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function RestaurantCard({ restaurant, isSaved, onPress, onToggleSave }: Props) {
+  const isLoggedIn = useAppStore(s=>s.isLoggedIn);
   return (
     <Pressable
       onPress={onPress}
@@ -36,7 +38,7 @@ export function RestaurantCard({ restaurant, isSaved, onPress, onToggleSave }: P
         <View style={styles.imageOverlay}>
           <Text style={styles.cuisineBadge}>{restaurant.cuisine}</Text>
         </View>
-        <TouchableOpacity
+        {isLoggedIn && <TouchableOpacity
           style={styles.heart}
           onPress={(e) => {
             e.stopPropagation?.();
@@ -46,11 +48,11 @@ export function RestaurantCard({ restaurant, isSaved, onPress, onToggleSave }: P
           accessibilityLabel={isSaved ? 'Remove from saved' : 'Save restaurant'}
         >
           <Ionicons
-            name={isSaved ? 'heart' : 'heart-outline'}
+            name={isSaved ? 'bookmark' : 'bookmark-outline'}
             size={22}
             color={isSaved ? colors.orange : colors.ink}
           />
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </ImageBackground>
 
       <View style={styles.body}>
@@ -58,7 +60,7 @@ export function RestaurantCard({ restaurant, isSaved, onPress, onToggleSave }: P
           {restaurant.name}
         </Text>
         <Text style={styles.meta}>
-          {restaurant.cuisine} · {restaurant.suburb} · ★ {restaurant.rating}
+          {restaurant.cuisine} · {restaurant.suburb}
         </Text>
         <View style={styles.dealRow}>
           <View>
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.lg,
   },
   imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
     backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'flex-end',
     padding: spacing.md,
@@ -162,3 +164,4 @@ const styles = StyleSheet.create({
     color: colors.orange,
   },
 });
+

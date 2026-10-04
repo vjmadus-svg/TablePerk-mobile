@@ -1,3 +1,5 @@
+import { Alert } from 'react-native';
+import { request, authenticate, session, signOut } from '@/api/client';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,7 +32,14 @@ interface AppState {
   setTimeFilter: (t: DiningTime) => void;
   setSortBy: (s: SortOption) => void;
   toggleSaved: (id: string) => void;
-  login: (role: UserRole) => void;
+  username: string;
+  notifications: any[];
+  venues: any[];
+  login: (username: string, password: string, email?: string) => Promise<void>;
+  restoreSession: () => Promise<void>;
+  syncAccount: () => Promise<void>;
+  loadVenues: () => Promise<void>;
+  trackSearch: () => Promise<void>;
   logout: () => void;
   setMenuDate: (date: string) => void;
   setMenuItems: (items: MenuItem[]) => void;
@@ -63,20 +72,38 @@ export const useAppStore = create<AppState>()(
       setTimeFilter: (t) => set({ timeFilter: t }),
       setSortBy: (s) => set({ sortBy: s }),
 
-      toggleSaved: (id) =>
-        set((state) => ({
-          savedIds: state.savedIds.includes(id)
-            ? state.savedIds.filter((x) => x !== id)
-            : [...state.savedIds, id],
-        })),
-
-      login: (role) => set({ isLoggedIn: true, role }),
-      logout: () =>
-        set({
-          isLoggedIn: false,
-          role: null,
-          publishStatus: 'draft',
-        }),
+      username: '', notifications: [], venues: [],
+      loadVenues: async () => {try {set({venues:(await request('/restaurants')).restaurants});} catch { /* discovery displays connection status separately */ }},
+      trackSearch: async () => {
+        if (!get().isLoggedIn || !get().searchQuery.trim()) return;
+        try {await request('/me/searches',{method:'POST',body:JSON.stringify({query:get().searchQuery.trim()})});} catch(e) {Alert.alert('Search history', (e as Error).message);}
+      },
+      syncAccount: async () => {
+        const account=get().username;
+        const [saved, notices] = await Promise.all([request('/me/saved'),request('/me/notifications')]);
+        if(get().isLoggedIn && get().username===account)set({savedIds:saved.ids,notifications:notices.notifications});
+      },
+      toggleSaved: async (id) => {
+        if (!get().isLoggedIn) return;
+        const saved=get().savedIds.includes(id);
+        try {await request('/me/saved/'+id,{method:saved?'DELETE':'PUT'});await get().syncAccount();}
+        catch(e) {Alert.alert('Could not save', (e as Error).message);}
+      },
+      login: async (username,password,email) => {
+        const user=await authenticate(username,password,email);
+        set({isLoggedIn:true,username:user.username||user.email,role:user.role==='CUSTOMER'?'customer':'restaurant'});
+        await get().syncAccount();
+      },
+      restoreSession: async () => {
+        try {
+          const user=await session();
+          if(user){set({isLoggedIn:true,username:user.username||user.email,role:user.role==='CUSTOMER'?'customer':'restaurant'});await get().syncAccount();}
+        } catch { set({isLoggedIn:false,role:null,savedIds:[],notifications:[]}); }
+      },
+      logout: async () => {
+        try {await signOut();} catch(e) {Alert.alert('Signed out on this device', 'Could not revoke the server session. It will expire automatically.');}
+        set({isLoggedIn:false,role:null,username:'',savedIds:[],notifications:[],searchQuery:'',publishStatus:'draft'});
+      },
 
       setMenuDate: (date) => {
         set({ menuDate: date });
@@ -127,12 +154,9 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: 'tableperk-storage',
+      name: 'tableperk-drafts-v2',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
-        savedIds: state.savedIds,
-        isLoggedIn: state.isLoggedIn,
-        role: state.role,
         menuItems: state.menuItems,
         menuDate: state.menuDate,
         publishStatus: state.publishStatus,
@@ -140,3 +164,4 @@ export const useAppStore = create<AppState>()(
     }
   )
 );
+

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { restaurants } from '@/data/restaurants';
 import { useAppStore } from '@/store/useAppStore';
 import { RestaurantCard } from '@/components/RestaurantCard';
@@ -10,9 +10,10 @@ import { typography } from '@/theme/typography';
 
 export default function SavedScreen() {
   const router = useRouter();
-  const { savedIds, toggleSaved } = useAppStore();
-  const saved = restaurants.filter((r) => savedIds.includes(r.id));
+  const { savedIds, toggleSaved, isLoggedIn, venues } = useAppStore();
+  const saved = venues.filter((r) => savedIds.includes(r.id));
 
+  if(!isLoggedIn)return <Redirect href='/account' />;
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
@@ -88,3 +89,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
 });
+

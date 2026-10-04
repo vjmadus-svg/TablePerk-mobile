@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import { SavingsPlanner } from '@/components/SavingsPlanner';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -27,6 +28,7 @@ export default function DiscoverScreen() {
   const [loginVisible, setLoginVisible] = useState(false);
 
   const {
+    venues,
     searchQuery,
     activeCuisine,
     timeFilter,
@@ -41,16 +43,17 @@ export default function DiscoverScreen() {
     role,
   } = useAppStore();
 
+  useEffect(()=>{if(!searchQuery.trim()||!isLoggedIn)return;const timer=setTimeout(()=>{void useAppStore.getState().trackSearch();},900);return ()=>clearTimeout(timer);},[searchQuery,isLoggedIn]);
   const filtered = useMemo(
     () =>
       filterAndSortRestaurants(
-        restaurants,
+        venues,
         searchQuery,
         activeCuisine,
         timeFilter,
         sortBy
       ),
-    [searchQuery, activeCuisine, timeFilter, sortBy]
+    [venues, searchQuery, activeCuisine, timeFilter, sortBy]
   );
 
   return (
@@ -155,6 +158,7 @@ export default function DiscoverScreen() {
           </View>
         </View>
 
+        <SavingsPlanner />
         {/* Cards */}
         {filtered.map((r) => (
           <RestaurantCard
@@ -392,3 +396,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+

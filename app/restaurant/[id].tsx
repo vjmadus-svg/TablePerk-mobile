@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react';
+import { request } from '@/api/client';
+import { SavingsPlanner } from '@/components/SavingsPlanner';
+import React, { useMemo, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,13 +20,15 @@ import { typography } from '@/theme/typography';
 export default function RestaurantDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { savedIds, toggleSaved } = useAppStore();
+  const { savedIds, toggleSaved, isLoggedIn, venues } = useAppStore();
 
   const restaurant = useMemo(
-    () => restaurants.find((r) => r.id === id),
-    [id]
+    () => venues.find((r) => r.id === id),
+    [id, venues]
   );
 
+  const [sampleMenu,setMenu]=useState<any[]>([]);
+  useEffect(()=>{void request('/restaurants/'+id+'/menu').then(data=>setMenu(data.items.map((i:any)=>({name:i.name,description:i.description,old:'',price:`$${(i.price_cents/100).toFixed(2)}`})))).catch(()=>setMenu([]));},[id]);
   if (!restaurant) {
     return (
       <View style={styles.center}>
@@ -37,43 +41,22 @@ export default function RestaurantDetailScreen() {
   const discounted = (price: number) =>
     `$${(price * (1 - restaurant.discount / 100)).toFixed(2)}`;
 
-  const sampleMenu = [
-    {
-      name: "Chef’s favourite",
-      description: `A Tableperk pick from the ${restaurant.cuisine.toLowerCase()} kitchen`,
-      old: '$18.00',
-      price: discounted(18),
-    },
-    {
-      name: 'House special',
-      description: 'Made fresh today and ready to enjoy',
-      old: '$24.00',
-      price: discounted(24),
-    },
-    {
-      name: 'Something sweet',
-      description: 'Finish your meal on a good note',
-      old: '$10.00',
-      price: discounted(10),
-    },
-  ];
-
-  const more = restaurants.filter((r) => r.id !== restaurant.id).slice(0, 4);
+  const more = venues.filter((r) => r.id !== restaurant.id).slice(0, 4);
 
   return (
     <>
       <Stack.Screen
         options={{
           title: restaurant.name,
-          headerRight: () => (
+          headerRight: () => isLoggedIn ? (
             <Pressable onPress={() => toggleSaved(restaurant.id)} hitSlop={12}>
               <Ionicons
-                name={isSaved ? 'heart' : 'heart-outline'}
+                name={isSaved ? 'bookmark' : 'bookmark-outline'}
                 size={24}
                 color={isSaved ? colors.orange : colors.ink}
               />
             </Pressable>
-          ),
+          ) : null,
         }}
       />
 
@@ -90,29 +73,22 @@ export default function RestaurantDetailScreen() {
           </View>
         </ImageBackground>
 
+        <SavingsPlanner restaurantId={id} />
         <View style={styles.info}>
           <Text style={styles.breadcrumbs}>
-            All venues / Melbourne / {restaurant.suburb}
+            All venues / {restaurant.suburb}
           </Text>
           <Text style={styles.title}>{restaurant.name}</Text>
           <Text style={styles.address}>
-            ⌖ {restaurant.address || `${restaurant.suburb} dining precinct, Melbourne`}
+            ⌖ {restaurant.address || 'Address not published'}
           </Text>
-          <View style={styles.openRow}>
-            <View style={styles.openDot} />
-            <Text style={styles.openText}>
-              <Text style={{ fontWeight: '700', color: colors.orange }}>Open</Text>
-              {' · '}Today until 10:00pm
-            </Text>
-          </View>
+
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Overview</Text>
           <Text style={styles.overview}>
-            {restaurant.name} is a {restaurant.cuisine.toLowerCase()} favourite in{' '}
-            {restaurant.suburb}, with generous plates, friendly service and a great reason
-            to make tonight a little more delicious.
+            {restaurant.description || 'Restaurant details will appear here when published.'}
           </Text>
         </View>
 
@@ -120,7 +96,7 @@ export default function RestaurantDetailScreen() {
           <View style={styles.menuHeader}>
             <Text style={styles.sectionTitle}>Menu</Text>
             <View style={styles.discountBadge}>
-              <Text style={styles.discountBadgeText}>{restaurant.discount}% off</Text>
+              <Text style={styles.discountBadgeText}>Published prices</Text>
             </View>
           </View>
           {sampleMenu.map((item) => (
@@ -341,3 +317,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+
