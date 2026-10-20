@@ -10,21 +10,21 @@ import { typography } from '@/theme/typography';
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { isLoggedIn, role, logout, restaurantName } = useAppStore();
+  const { isLoggedIn, role, logout, restaurantName, username } = useAppStore();
   const [loginVisible, setLoginVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <Text style={typography.h2}>Account</Text>
-        <Text style={styles.sub}>Demo login only — no real accounts yet.</Text>
+        <Text style={styles.sub}>Sign in to save offers and track your discounts.</Text>
 
         <View style={styles.card}>
           {isLoggedIn ? (
             <>
               <Text style={styles.label}>Signed in as</Text>
               <Text style={styles.value}>
-                {role === 'restaurant' ? restaurantName : 'Demo customer'}
+                {role === 'restaurant' ? restaurantName : username}
               </Text>
               <Text style={styles.roleBadge}>
                 {role === 'restaurant' ? 'Restaurant partner' : 'Customer'}
@@ -49,7 +49,7 @@ export default function AccountScreen() {
             <>
               <Text style={styles.value}>Not signed in</Text>
               <Text style={styles.hint}>
-                Use the demo credentials to try customer or restaurant partner flows.
+                Create an account or sign in with your username and password.
               </Text>
               <Button
                 title="Log in"
@@ -61,10 +61,9 @@ export default function AccountScreen() {
         </View>
 
         <View style={styles.info}>
-          <Text style={styles.infoTitle}>About this demo</Text>
+          <Text style={styles.infoTitle}>Your account</Text>
           <Text style={styles.infoBody}>
-            Tableperk Mobile is a React Native reconstruction of the Tableperk deals experience.
-            Favourites and menu drafts are stored on this device only.
+            Your saved venues, searches and discount notifications are linked to your account.
           </Text>
         </View>
       </View>
@@ -128,3 +127,4 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
 });
+

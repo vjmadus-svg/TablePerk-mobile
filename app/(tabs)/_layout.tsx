@@ -1,8 +1,11 @@
+import { useAppStore } from '@/store/useAppStore';
+import { NotificationBell } from '@/components/NotificationBell';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 
 export default function TabLayout() {
+  const isLoggedIn = useAppStore(s=>s.isLoggedIn);
   return (
     <Tabs
       screenOptions={{
@@ -16,6 +19,7 @@ export default function TabLayout() {
         },
         headerStyle: { backgroundColor: colors.white },
         headerShadowVisible: false,
+        headerRight: () => isLoggedIn ? <NotificationBell /> : null,
         headerTitleStyle: { fontWeight: '800', letterSpacing: -0.5 },
       }}
     >
@@ -33,8 +37,9 @@ export default function TabLayout() {
         name="saved"
         options={{
           title: 'Saved',
+          href: isLoggedIn ? '/saved' : null,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" size={size} color={color} />
+            <Ionicons name="bookmark" size={size} color={color} />
           ),
         }}
       />
@@ -50,3 +55,4 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+

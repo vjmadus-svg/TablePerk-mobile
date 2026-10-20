@@ -26,24 +26,18 @@ interface Props {
 }
 
 export function LoginModal({ visible, onClose, defaultRole = 'customer' }: Props) {
-  const [email, setEmail] = useState(DEMO_EMAIL);
-  const [password, setPassword] = useState(DEMO_PASSWORD);
-  const [role, setRole] = useState<UserRole>(defaultRole);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [register, setRegister] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const login = useAppStore((s) => s.login);
-  const router = useRouter();
-
-  const handleLogin = () => {
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      setMessage('Demo login successful — welcome to Tableperk.');
-      login(role);
-      onClose();
-      if (role === 'restaurant') {
-        router.push('/workspace');
-      }
-    } else {
-      setMessage('Use the sample credentials shown above.');
-    }
+  const login = useAppStore(s=>s.login);
+  const handleLogin = async () => {
+    if(busy)return;
+    setBusy(true);setMessage('');
+    try {await login(username,password,register?email:undefined);setPassword('');onClose();}
+    catch(e){setMessage((e as Error).message);} finally{setBusy(false);}
   };
 
   return (
@@ -58,59 +52,15 @@ export function LoginModal({ visible, onClose, defaultRole = 'customer' }: Props
               <Ionicons name="close" size={28} color={colors.ink} />
             </Pressable>
 
-            <Text style={[typography.eyebrow, { color: colors.orange }]}>TABLEPERK DEMO</Text>
-            <Text style={styles.title}>Welcome back.</Text>
-            <Text style={styles.copy}>
-              Use the sample account below to test the login flow. This demo does not send
-              credentials to a server.
-            </Text>
-
-            <View style={styles.credentials}>
-              <Text style={styles.credLabel}>Test email</Text>
-              <Text style={styles.credValue}>{DEMO_EMAIL}</Text>
-              <Text style={styles.credLabel}>Test password</Text>
-              <Text style={styles.credValue}>{DEMO_PASSWORD}</Text>
-            </View>
-
-            <Text style={styles.label}>Account type</Text>
-            <View style={styles.roleRow}>
-              <Pressable
-                style={[styles.roleBtn, role === 'customer' && styles.roleActive]}
-                onPress={() => setRole('customer')}
-              >
-                <Text style={[styles.roleText, role === 'customer' && styles.roleTextActive]}>
-                  Customer
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.roleBtn, role === 'restaurant' && styles.roleActive]}
-                onPress={() => setRole('restaurant')}
-              >
-                <Text style={[styles.roleText, role === 'restaurant' && styles.roleTextActive]}>
-                  Restaurant partner
-                </Text>
-              </Pressable>
-            </View>
-
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-            />
-
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            <Button title="Continue to demo →" onPress={handleLogin} style={{ marginTop: 20 }} />
+            <Text style={styles.title}>{register ? 'Join TablePerk' : 'Welcome back'}</Text>
+            <Text style={styles.copy}>Your session is remembered securely on this device.</Text>
+            <Text style={styles.label}>Username</Text>
+            <TextInput style={styles.input} value={username} onChangeText={setUsername} autoCapitalize="none" autoComplete="username" />
+            {register && <><Text style={styles.label}>Email</Text><TextInput style={styles.input} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" /></>}
+            <Text style={styles.label}>Password{register ? ' (12–72 characters)' : ''}</Text>
+            <TextInput style={styles.input} value={password} onChangeText={setPassword} secureTextEntry autoComplete={register ? 'new-password' : 'current-password'} />
+            <Button title={busy ? 'Please wait…' : register ? 'Create account' : 'Sign in'} onPress={handleLogin} style={{marginTop:20}} />
+            <Pressable onPress={()=>{setRegister(!register);setMessage('');}}><Text style={styles.message}>{register ? 'Already registered? Sign in' : 'New here? Create an account'}</Text></Pressable>
             {message ? <Text style={styles.message}>{message}</Text> : null}
           </Pressable>
         </KeyboardAvoidingView>
@@ -221,3 +171,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+

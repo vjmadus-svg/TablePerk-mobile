@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useAppStore } from '@/store/useAppStore';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -5,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
 
 export default function RootLayout() {
+  useEffect(()=>{void useAppStore.getState().restoreSession();void useAppStore.getState().loadVenues();},[]);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -38,3 +41,4 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
